@@ -4,7 +4,10 @@ pkg/gotooling/
 pkg/radare2w64/
 pkg/r2pipe/
 pkg/nasm/
-pkg/
+pkg/ropspecific/
+pkg/codeql/
+pkg/capstone/
+pkg/archives/
 
 
 .vscode/
