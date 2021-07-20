@@ -1,7 +1,8 @@
-#ROPGadget scan tool ONLY!!!!
-#stop feature creeping on init
 # -*- coding: utf-8 -*-
 #!/usr/bin/python3.9
+#ROPGadget scan tool ONLY!!!!
+#stop feature creeping on init
+# who the fuck am I kidding, look at all ther different titles lying around
 ################################################################################
 ##       Automated Fuzzing Harness Generator - Vintage 2021 Python 3.9        ##
 ################################################################################                
@@ -30,9 +31,15 @@ main file
 import sys,os
 import argparse
 import os,sys
+import requests
 import subprocess
 import configparser
 from src.util import errormessage,greenprint,redprint,blueprint
+
+import ipaddress
+from ipaddress import IPv4Address, IPv4Interface
+
+
 PROGRAM_DESCRIPTION = """
 A program to help you to hack binaries.         
 """
@@ -68,7 +75,7 @@ parser.add_argument('--use-config',
                         dest = 'useconfig',
                         action  = "store_true",
                         default = False ,
-                        help = " use this flag for usingthe config file",
+                        help = " use this flag for using the config file",
                         required=False
                         )
 parser.add_argument('--configset',
@@ -104,28 +111,26 @@ parser.add_argument('--outputdir',
 #                        default = False ,
 #                        help = "display debugging information \n DEFAULT: On"
 #                        )
-parser.add_argument('--detection', 
-                        dest = 'detection',
-                        action  = "store",
-                        default = 'headers' ,
-                        help = "'headers' to Auto-detect headers \n\
-                            'functions' for function definitions? what is this dogin?.", required=True)
 arguments = parser.parse_args()
  
 ###############################################################################
 ##                     CONFIGURATION FILE PARSER                             ##
 ###############################################################################
 try:
+    #parse args to get defaults
     arguments = parser.parse_args()
+    # get configs from the specified/default set
     config = configparser.ConfigParser()
-    listofpackages = config[arguments.configset]['packages'].split(',')
+    configset = arguments.configset
+    #start installing packages later
+    listofpackages = config[configset]['packages'].split(',')
     arguments = parser.parse_args()
     if arguments.config == True:
-        projectroot            = config['DEFAULT']['projectroot']
-        outputdirectory        = config['DEFAULT']['outputdirectory']
+        projectroot            = config[configset]['projectroot']
+        outputdirectory        = config[configset]['outputdirectory']
     elif arguments.config == False:
         projectroot            = arguments.projectroot
-        bqrsoutputdirectory    = arguments.outputdirectory
+        outputdirectory        = arguments.outputdirectory
 except Exception:
     errormessage("[-] Configuation File could not be parsed!")
     sys.exit(1)
@@ -175,9 +180,6 @@ def setusers():
     #sudo usermod kvm libvirt docker ubridge wireshark
     pass
 
-import ipaddress
-from ipaddress import IPv4Address, IPv4Interface
-
 def vboxrun():
     pass
 
@@ -188,9 +190,31 @@ def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
     '''
     Sets interface address
     '''
-    cmds = '''ip link set dev {device} down
+    return '''ip link set dev {device} down
     ip addr add {ipaddr}/{netmask} dev {device}
     ip link set dev {device} up'''.format().splitlines()
+
+#strippedlist = list(filter("",array))
+stripempties = lambda array: [i for i in array if i]
+
+def subprocArray(list_of_shell_commands):
+    '''
+    works with triple quoted bash scripts, no shell expansion
+    example:
+
+>>> def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
+>>>     return \'''ip link set dev {device} down
+>>>     ip addr add {ipaddr}/{netmask} dev {device}
+>>>     ip link set dev {device} up\'''.format().splitlines()
+
+>>> cmd_list = setifaceaddr("192.168.1.1", 24, "eno1")
+>>> returncode = subprocArray(cmd_list)
+    '''
+    #remove empty strings
+    list_of_shell_commands = stripempties(list_of_shell_commands)
+    for each in list_of_shell_commands:
+        subprocess.call()
+        pass            
 
 def mdns():
     '''
@@ -198,34 +222,48 @@ def mdns():
     sudo apt-get install libnss-mdns avahi-utils avahi-daemon
     avahi-resolve --verbose
     '''
+def installradare2():
+    '''
+    #https://github.com/radareorg/radare2/releases
+    Wrapper just in case
+    '''
+    releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
+    returncode = runshellcommand(releaseurl)
+
+def installpwndbg():
+    '''
+    Release:
+        https://github.com/pwndbg/pwndbg/archive/refs/tags/2021.06.22.tar.gz
+    Dev:
+        https://github.com/sashs/Ropper/archive/refs/heads/master.zip
+    '''
+    url = "https://github.com/pwndbg/pwndbg/archive/refs/heads/dev.zip"
+    requests.get(url=url,)
 
 
-#https://github.com/radareorg/radare2/releases
 def pulllatestrelease(profile:str,repo:str=""):
     '''
 >>> releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
 >>> returncode = runshellcommand(releaseurl)
     '''
     stepsdict =  {
-        {
-            "loc": '''latest_tag_url=$(curl -sI https://github.com/${profile}\}/${repo}/releases/latest \
-| grep -iE "^Location:"); echo "${latest_tag_url##*/}"'''.format(profile = profile,repo = repo),
-            "pass":"",
-            "fail":"",
-            "info":""
-        },
-    
-        {
+        #START basic shell command
+        # NAME
+        'meth1':{
+            # LINE OF CODE
             "loc": """curl --silent "https://api.github.com/{profile}/{repo}/releases/latest" \
 | jq -r .tag_name""".format(profile = profile,
                             repo = repo),
+            #PASS MESSAGE
             "pass":"",
+            #FAIL MESSAGE
             "fail":"",
+            #INFO MESSAGE
             "info":""        
         },
-    
+        #END: Basic shell command
         #if they dont support releases
-        {
+        "meth2":{
             "loc": """curl --silent "https://api.github.com/repos/{profile}/{repo}/tags" | jq -r '.[0].name'""".format(profile = profile,repo = repo),
             "pass":"success message",
             "fail":"",
@@ -240,6 +278,7 @@ def pulllatestrelease(profile:str,repo:str=""):
             print(each['pass'])
             break
         else:
+            print(each['fail'])
             continue
     os.chmod(download,mode = "+x")
 
