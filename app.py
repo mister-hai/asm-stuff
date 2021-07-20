@@ -1,85 +1,315 @@
 #ROPGadget scan tool ONLY!!!!
 #stop feature creeping on init
+# -*- coding: utf-8 -*-
+#!/usr/bin/python3.9
+################################################################################
+##       Automated Fuzzing Harness Generator - Vintage 2021 Python 3.9        ##
+################################################################################                
+# Licenced under GPLv3                                                        ##
+# https://www.gnu.org/licenses/gpl-3.0.en.html                                ##
+#                                                                             ##
+# The above copyright notice and this permission notice shall be included in  ##
+# all copies or substantial portions of the Software.                         ##
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+################################################################################
+TESTING = True
+"""
+main file
+"""
+################################################################################
+##############                      IMPORTS                    #################
+################################################################################
 
-
-PROGRAM_DESCRIPTION = ""
+import sys,os
+import argparse
+import os,sys
+import subprocess
+import configparser
+from src.util import errormessage,greenprint,redprint,blueprint
+PROGRAM_DESCRIPTION = """
+A program to help you to hack binaries.         
+"""
 TESTING = True
 
-import re
-import pkg.r2pipe as r2pipe
-import sys,os
-import inspect
-import traceback
-import subprocess
-import argparse
+################################################################################
+##############             COMMAND LINE ARGUMENTS              #################
+################################################################################
+
+parser = argparse.ArgumentParser(description=PROGRAM_DESCRIPTION)
+parser.add_argument('--workspacepath',
+                        dest = 'workspace',
+                        action  = "store" ,
+                        default = "workspace" ,
+                        help = "path to lib",
+                        required=True
+                        )
+#parser.add_argument('--',
+#                        dest = '',
+#                        action  = "store",
+#                        default = "" ,
+#                        help = "",
+#                        required=True
+#                        )
+#parser.add_argument('--database',
+#                        dest = 'database',
+#                        action  = "store",
+#                        default = "" ,
+#                        help = "",
+#                        required=True
+#                        )
+parser.add_argument('--use-config',
+                        dest = 'useconfig',
+                        action  = "store_true",
+                        default = False ,
+                        help = " use this flag for usingthe config file",
+                        required=False
+                        )
+parser.add_argument('--configset',
+                        dest = 'configset',
+                        action  = "store",
+                        default = "DEFAULT" ,
+                        help = " use this flag to select which configuration to use",
+                        required=False
+                        )
+parser.add_argument('--outputdir', 
+                        dest = 'outputdir',
+                        action  = "store",
+                        default = False ,
+                        help = "Output directory",
+                        required=True
+                        )
+#parser.add_argument('--compilerflags',
+#                        dest = 'compilerflags',
+#                        action  = "store",
+#                        default = False ,
+#                        help = "compiler flags (include)",
+#                        required=False
+#                        )
+#parser.add_argument('--headers',
+#                        dest = 'headers',
+#                        action  = "store",
+#                        default = False ,
+#                        help = "header files, CSV string",
+#                        required=False)
+#parser.add_argument('--debug',
+#                        dest = 'debug',
+#                        action  = "store_true",
+#                        default = False ,
+#                        help = "display debugging information \n DEFAULT: On"
+#                        )
+parser.add_argument('--detection', 
+                        dest = 'detection',
+                        action  = "store",
+                        default = 'headers' ,
+                        help = "'headers' to Auto-detect headers \n\
+                            'functions' for function definitions? what is this dogin?.", required=True)
+arguments = parser.parse_args()
+ 
+###############################################################################
+##                     CONFIGURATION FILE PARSER                             ##
+###############################################################################
 try:
-    import colorama
-    from colorama import init
-    init()
-    from colorama import Fore, Back, Style
-# Not from the documentation on colorama
-    if TESTING == True:
-        COLORMEQUALIFIED = True
-except ImportError as derp:
-    herp_a = derp
-    print("[-] NO COLOR PRINTING FUNCTIONS AVAILABLE, Install the Colorama Package from pip")
-    COLORMEQUALIFIED = False
+    arguments = parser.parse_args()
+    config = configparser.ConfigParser()
+    listofpackages = config[arguments.configset]['packages'].split(',')
+    arguments = parser.parse_args()
+    if arguments.config == True:
+        projectroot            = config['DEFAULT']['projectroot']
+        outputdirectory        = config['DEFAULT']['outputdirectory']
+    elif arguments.config == False:
+        projectroot            = arguments.projectroot
+        bqrsoutputdirectory    = arguments.outputdirectory
+except Exception:
+    errormessage("[-] Configuation File could not be parsed!")
+    sys.exit(1)
 
-redprint          = lambda text: print(Fore.RED + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
-blueprint         = lambda text: print(Fore.BLUE + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
-greenprint        = lambda text: print(Fore.GREEN + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
-yellow_bold_print = lambda text: print(Fore.YELLOW + Style.BRIGHT + ' {} '.format(text) + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
+greenprint("[+] Loaded Commandline Arguments")
 
-def error_printer(message):
-    exc_type, exc_value, exc_tb = sys.exc_info()
-    trace = traceback.TracebackException(exc_type, exc_value, exc_tb) 
-    blueprint('LINE NUMBER >>>' + str(exc_tb.tb_lineno))
-    greenprint('[+]The Error That Occured Was :')
-    redprint( message + ''.join(trace.format_exception_only()))
-    yellow_bold_print("Some info:")
-    exc_info = sys.exc_info()
-    traceback.print_exception(*exc_info)
+def rootinplace():
+    '''establishes this scripts operating location and relative code locations'''
+    env = [projectroot,
+           outputdirectory,
+           ]
+    setenv(env)
+    if 'radare2' in listofpackages:
+        pulllatestrelease('radareorg','radare2')
+    if 'metasploit' in listofpackages:
+        metasploitinstall()
+    
 
 def setenv(installdirs:list):
-    '''sets the environment for operating as a self contained package
-    provide paths to submodules necessary for import as a list
-    '''
-    if len(installdirs) = 1:
-        os.environ["PATH"] += os.pathsep + path
-    elif len(installdirs) > 1:
-        os.environ["PATH"] += os.pathsep + os.pathsep.join(pathlist)
-    #powershell
-    #$env:Path = "SomeRandomPath";  (replaces existing path) 
-    #$env:Path += ";SomeRandomPath" (appends to existing path)
-
-class LoadEnv(object):
-    def __init__(self):
-        snoodles
-        {
-            {"installpwntool" :'pip install --upgrade --editable ./pwntools',
-                "info":"",
-                "success":"",
-                "fail":""
-                },
-            {"cmd" :'',
-                "info":"",
-                "success":"",
-                "fail":""
-                }
-        
-        }
-        pass
-
-    def exec_command(self, command, shell_env=True):
-        '''Runs a python script with subprocess.Popen'''
+    '''sets the PATH variables for operation'''
     try:
-        subprocess.Popen(command,shell=shell_env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        output, error = step.communicate()
-            for output_line in output.decode().split('\n'):
-                print(output_line)
-            for error_lines in error.decode().split('\n'):
-                print(error_lines + " ERROR LINE")
-        return True
+        #validation for future expansions
+        if len(installdirs) > 1:
+            #make the installation directories
+            for projectdirectory in installdirs:
+                os.makedirs(projectdirectory, exist_ok=False)
+            #set path to point to those directories
+            os.environ["PATH"] += os.pathsep + os.pathsep.join(installdirs)
     except Exception:
-        error_printer("[-] Interpreter Message: exec_command() failed!")
-        return False
+        errormessage("[-] Failure to set Environment, Check Your Permissions Schema")
+
+def makedirs():
+    '''
+    makes directories for project
+    '''
+    pass
+
+def setnewnamespace():
+    '''
+    using internals to set a namespaec, this is sandboxing in action
+    '''
+    pass
+def setusers():
+    '''
+    :param: groups
+    '''
+    #sudo usermod kvm libvirt docker ubridge wireshark
+    pass
+
+import ipaddress
+from ipaddress import IPv4Address, IPv4Interface
+
+def vboxrun():
+    pass
+
+def qemurun():
+    pass
+
+def setiface(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
+    '''
+    ip link set dev eno1 down
+    ip addr add 192.168.1.1/24 dev eno1
+    ip link set dev eno1 up
+    '''
+
+def mdns():
+    '''
+    Resolves mdns for the Pi.
+    sudo apt-get install libnss-mdns avahi-utils avahi-daemon
+    avahi-resolve --verbose
+    '''
+
+
+#https://github.com/radareorg/radare2/releases
+def pulllatestrelease(profile:str,repo:str=""):
+    '''
+>>> releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
+>>> returncode = runshellcommand(releaseurl)
+    '''
+    stepsdict =  {
+        {
+            "loc": '''latest_tag_url=$(curl -sI https://github.com/${profile}\}/${repo}/releases/latest \
+| grep -iE "^Location:"); echo "${latest_tag_url##*/}"'''.format(profile = profile,repo = repo),
+            "pass":"",
+            "fail":"",
+            "info":""
+        },
+    
+        {
+            "loc": """curl --silent "https://api.github.com/{profile}/{repo}/releases/latest" \
+| jq -r .tag_name""".format(profile = profile,
+                            repo = repo),
+            "pass":"",
+            "fail":"",
+            "info":""        
+        },
+    
+        #if they dont support releases
+        {
+            "loc": """curl --silent "https://api.github.com/repos/{profile}/{repo}/tags" | jq -r '.[0].name'""".format(profile = profile,repo = repo),
+            "pass":"success message",
+            "fail":"",
+            "info":""        
+        }
+    }
+    for each in stepsdict:
+        ## TODO check the operations of eval vs exec 
+        # splitting by lines versus block o text?
+        download = subprocess.call(each.get['loc'])
+        if download:
+            print(each['pass'])
+            break
+        else:
+            continue
+    os.chmod(download,mode = "+x")
+
+def metasploitinstall():
+    '''
+curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && \
+chmod 755 msfinstall && \
+./msfinstall
+    '''
+
+def msfdb():
+    '''
+    
+    only run when setting up
+    '''
+    return {   
+        "msfdb_init": {
+            "command"         : "example_command {}".format(""),
+            "info_message"    : "[+] INFORMATION",
+            "success_message" : "[+] Command Sucessful", 
+            "failure_message" : "[-] Command Failed! Check the logfile!"           
+        }
+    }
+
+def msfrpcd(operation:str, ipaddr:IPv4Address = "127.0.0.1",password:str = "root"):
+    return {
+        "msf_rpcd": {
+            "command"         : "sudo msfrpcd -P {} -a {} -S".format(password,ipaddr),
+            "info_message"    : "[+] INFORMATION",
+            "success_message" : "[+] Command Sucessful", 
+            "failure_message" : "[-] Command Failed! Check the logfile!"           
+        }
+    }
+
+def armitage():
+    locs = '''
+    export MSF_DATABASE_CONFIG=~/.msf4/database.yml
+    java -jar armitage.jar
+    '''
+        
+    return {
+        "examplename": {
+            "command"         : "example_command {}".format(""),
+            "info_message"    : "[+] INFORMATION",
+            "success_message" : "[+] Command Sucessful", 
+            "failure_message" : "[-] Command Failed! Check the logfile!"           
+        },
+        "examplename": {
+            "command"         : "example_command {}".format(""),
+            "info_message"    : "[+] INFORMATION",
+            "success_message" : "[+] Command Sucessful", 
+            "failure_message" : "[-] Command Failed! Check the logfile!"           
+        }
+    
+    
+    
+    }
+
+def msfrpc(action:str,ip:IPv4Address,port:int):
+    '''OPTIONS:
+    -P <opt>  Specify the password to access msfrpcd
+    -S        Disable SSL on the RPC socket
+    -U <opt>  Specify the username to access msfrpcd
+    -a <opt>  Connect to this IP address
+    -p <opt>  Connect to the specified port instead of 55553
+    '''
+    pass
+
+if __name__ == '__main__':
+    rootinplace()
+#    scanmodule = Scanner()
+    #root the scanner in place
+#    scanmodule.scancode()
+    #scanmodule.genharness()

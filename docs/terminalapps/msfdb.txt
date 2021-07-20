@@ -1,0 +1,45 @@
+Usage: msfdb [options] <command>
+Manage a Metasploit Framework database and web service
+
+msfdb --debug --
+General Options:
+        --component COMPONENT        Component used with provided command (default: database)
+                                       (database, webservice)
+    -d, --debug                      Enable debug output
+    -h, --help                       Show this help message
+        --use-defaults               Accept all defaults and do not prompt for options during an init
+
+Database Options:
+        --msf-db-name NAME           Database name (default: msf)
+        --msf-db-user-name USER      Database username (default: msf)
+        --msf-test-db-name NAME      Test database name (default: msftest)
+        --msf-test-db-user-name USER Test database username (default: msftest)
+        --db-port PORT               Database port (default: 5433)
+        --db-pool MAX                Database connection pool size (default: 200)
+        --connection-string URI      Use a pre-existing database cluster for initialization
+                                     Example: --connection-string=postgresql://postgres:mysecretpassword@localhost:5432/postgres
+
+Web Service Options:
+    -a, --address ADDRESS            Bind to host address (default: localhost)
+    -p, --port PORT                  Web service port (default: 5443)
+        --[no-]daemon                Enable daemon
+        --[no-]ssl                   Enable SSL (default: true)
+        --ssl-key-file PATH          Path to private key (default: /home/moop/.msf4/msf-ws-key.pem)
+        --ssl-cert-file PATH         Path to certificate (default: /home/moop/.msf4/msf-ws-cert.pem)
+        --[no-]ssl-disable-verify    Disables (optional) client cert requests (default: true)
+        --environment ENV            Web service framework environment (default: production)
+                                       (production, development)
+        --retry-max MAX              Maximum number of web service connect attempts (default: 10)
+        --retry-delay DELAY          Delay in seconds between web service connect attempts (default: 5.0)
+        --user USER                  Initial web service admin username
+        --pass PASS                  Initial web service admin password
+        --[no-]msf-data-service NAME Local msfconsole data service connection name
+
+Commands:
+  init     initialize the component
+  reinit   delete and reinitialize the component
+  delete   delete and stop the component
+  status   check component status
+  start    start the component
+  stop     stop the component
+  restart  restart the component
