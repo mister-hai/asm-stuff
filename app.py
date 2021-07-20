@@ -184,12 +184,13 @@ def vboxrun():
 def qemurun():
     pass
 
-def setiface(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
+def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
     '''
-    ip link set dev eno1 down
-    ip addr add 192.168.1.1/24 dev eno1
-    ip link set dev eno1 up
+    Sets interface address
     '''
+    cmds = '''ip link set dev {device} down
+    ip addr add {ipaddr}/{netmask} dev {device}
+    ip link set dev {device} up'''.format().splitlines()
 
 def mdns():
     '''
@@ -251,7 +252,6 @@ chmod 755 msfinstall && \
 
 def msfdb():
     '''
-    
     only run when setting up
     '''
     return {   
