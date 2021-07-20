@@ -40,7 +40,7 @@ def errorprinter(message):
     Generally you supply an error string in the form of :
     
     "[-] ERROR: something happened in {some name here}" 
-    
+
     If the exception handler throws an error, That error will be printed'''
     exc_type, exc_value, exc_tb = sys.exc_info()
     trace = traceback.TracebackException(exc_type, exc_value, exc_tb) 
@@ -75,18 +75,6 @@ assert result == "Hello Worl\n"
         thread = threading.Thread(None,self.thread_function, self.function_name)
         thread.start()
         print("Thread {}: finishing".format(name))
-
-def testreturnval():
-    return {
-    'NAME':{
-        "loc": "ls -la".format(),
-        "pass":"PASS MESSAGE",
-        "fail":"FAIL MESSAGE",
-        "info":"INFO MESSAGE"
-        }
-    }
-        
-class CommandDict():
     '''
 Basic shell command 
 def returnval():
@@ -100,23 +88,31 @@ asdf = {
     }
 ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
     '''
+def testreturnval():
+    return {'NAME':{
+                "loc": "ls -la",
+                "succ":"PASS MESSAGE",
+                "fail":"FAIL MESSAGE",
+                "info":"INFO MESSAGE"
+                }
+            }
+        
+class CommandDict():
     def __init__(self,dictstep:dict):
         #check stuff
         try:
-            keys = dictstep.keys()
-            #  one command -----  only four fields
-            if len(keys) == 1 and len(dictstep.get(list(dictstep.keys())[0])) != 4:
+            name = list(dictstep.keys())[0]
+            #  one command #only four fields
+            if len(dictstep.keys()) == 1 and len(dictstep.get(name)) == 4:
                 #raise exception if failure to match
-                self.name = dictstep.keys[0]
-                self.cmd  = dictstep[self.name]['loc']
-                self.info = dictstep[self.name]['info']
-                self.succ = dictstep[self.name]["pass"]
-                self.fail = dictstep[self.name]["fail"]
-            else:
-                raise Exception
+                self.name = name
+                self.cmd  = dictstep[name]['loc']
+                self.info = dictstep[name]['info']
+                self.succ = dictstep[name]["succ"]
+                self.fail = dictstep[name]["fail"]
         except Exception:
-            errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n")
-
+            print("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n")
+    
     def __repr__(self):
         print("Command:")
         print(self.name)
@@ -124,7 +120,7 @@ ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
         print(self.cmd)
 
 test = CommandDict(testreturnval())
-test.__repr__
+test.__repr__()
 
 class PyBashyRun(object):
     '''
