@@ -65,9 +65,9 @@ result = p2.stdout.read()
 assert result == "Hello Worl\n"
 
     '''
-    def __init__(self,function_to_thread):
+    def __init__(self,function_to_thread, threadname):
         self.thread_function = function_to_thread
-        self.function_name   = getattr(self.thread_function.__name__)
+        self.function_name   = threadname
         self.threader(self.thread_function,self.function_name)
 
     def threader(self, thread_function, name):
@@ -88,15 +88,7 @@ asdf = {
     }
 ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
     '''
-def testreturnval():
-    return {'NAME':{
-                "loc": "ls -la",
-                "succ":"PASS MESSAGE",
-                "fail":"FAIL MESSAGE",
-                "info":"INFO MESSAGE"
-                }
-            }
-        
+
 class CommandDict():
     def __init__(self,dictstep:dict):
         #check stuff
@@ -106,7 +98,7 @@ class CommandDict():
             if len(dictstep.keys()) == 1 and len(dictstep.get(name)) == 4:
                 #raise exception if failure to match
                 self.name = name
-                self.cmd  = dictstep[name]['loc']
+                self.loc  = dictstep[name]['loc']
                 self.info = dictstep[name]['info']
                 self.succ = dictstep[name]["succ"]
                 self.fail = dictstep[name]["fail"]
@@ -117,10 +109,7 @@ class CommandDict():
         print("Command:")
         print(self.name)
         print("Command String:")
-        print(self.cmd)
-
-test = CommandDict(testreturnval())
-test.__repr__()
+        print(self.loc)
 
 class PyBashyRun(object):
     '''
@@ -128,6 +117,7 @@ Do not call this class
     '''
     def __init__(self, jsonfunction:dict):
         self.func = CommandDict(jsonfunction)
+        self.name = self.func.name
 
     def failfunc(self):
         '''
@@ -206,5 +196,21 @@ class PybashyRunSingleJSON():
     ''' 
     def __init__(self, JSONCommandToRun:dict):
         newcmd = PybashyRunFunction(JSONCommandToRun)
-        GenPerpThreader(newcmd.run)
+        GenPerpThreader(newcmd.run, newcmd.name)
         # huh... I hope that really is all it takes... that seemed simple!
+
+
+if __name__ == "__main__":
+    def testreturnval():
+        return {'NAME':{
+                "loc": "ls -la",
+                "succ":"PASS MESSAGE",
+                "fail":"FAIL MESSAGE",
+                "info":"INFO MESSAGE"
+                }
+            }
+    #testing comand dict operations
+    test = CommandDict(testreturnval())
+    test.__repr__()
+    #testing the run function
+    PybashyRunSingleJSON(testreturnval())
