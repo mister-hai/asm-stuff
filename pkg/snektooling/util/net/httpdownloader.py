@@ -37,6 +37,8 @@ from urllib.parse import urlparse
 from requests.utils import default_headers, requote_uri
 from requests.auth import HTTPBasicAuth
 
+from Utils import errorprinter,redprint,greenprint,blueprint
+from Utils import debug_message,info_message
 
 class HTTPDownloadRequest():
     '''
@@ -45,12 +47,19 @@ class HTTPDownloadRequest():
 >>> target = 'https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz'
 >>> newrequest = HTTPDownloadRequest(headers,url)
 >>> newrequest.makerequest()
->>> tarfileblob = newrequest.data
+>>> tarfileblob = newrequest.response.raw.read()
 
     To make a second request for a different file/schema
 
 >>> newrequest.setrequesturl(url)
 >>> newrequest.makerequest()
+    The reply , if successful, is stored in
+
+        HTTPDownloadRequest.response
+
+    Error Codes stored in 
+
+
     '''
 
     def __init__(self):
@@ -68,6 +77,18 @@ class HTTPDownloadRequest():
 
         if len(self.headers) > 0:
             self.headers = defaultheaders
+    
+    def checkforgzip(self,newfilename, response:requests.Response):
+        '''
+        Checks to see if Gzip to prevent decompression
+        TODO add to filtering section
+        '''
+        if {'Content-Encoding': 'gzip'} in response.headers:
+            with open(newfilename, 'wb') as f:
+                for chunk in response.raw.stream(1024, decode_content=False):
+                    if chunk:
+                        f.write(chunk)
+                f.close()
 
     def makerequest(self):
         '''
@@ -134,6 +155,20 @@ class HTTPDownloadRequest():
                     self.retryrequest(url)        
             # Return nothing to signify a failed request.
             return None
+
+    def filteractive(self):
+        '''
+        Return the state of the filter apparatus
+        '''
+        return self.filtering
+
+    def togglefilter(self):
+        if self.filteractive == True:
+            self.filteractive = False
+        elif self.filteractive == False:
+            self.filteractive = True
+        else:
+            errormessage("[-] Failure to toggle domain filter")
 
     def retryrequest(self,url):
         '''and this is sent if we need to retry'''
