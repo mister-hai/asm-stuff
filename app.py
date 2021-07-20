@@ -234,7 +234,7 @@ def installropper():
     '''
     https://github.com/sashs/Ropper/archive/refs/heads/master.zip
     '''
-    
+
 def installpwndbg():
     '''
     Release:
@@ -249,7 +249,7 @@ def installpwndbg():
 def pulllatestrelease(profile:str,repo:str=""):
     '''
 >>> releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
->>> returncode = runshellcommand(releaseurl)
+>>> returncode = runshellsteps(releaseurl)
     '''
     stepsdict =  {
         #START basic shell command
@@ -275,10 +275,22 @@ def pulllatestrelease(profile:str,repo:str=""):
             "info":""        
         }
     }
+
+def runshellsingleton():
+    '''
+    
+    '''
+
+    
+def runshellsteps(stepsdict):
+    '''
+    
+    '''
+    from core import PybashyRunSingleJSON
     for each in stepsdict:
         ## TODO check the operations of eval vs exec 
         # splitting by lines versus block o text?
-        download = subprocess.call(each.get['loc'])
+         each.get['loc']
         if download:
             print(each['pass'])
             break

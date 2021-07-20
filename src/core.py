@@ -40,13 +40,37 @@ from pathlib import Path
 from importlib import import_module
 
 from util import greenprint,yellowboldprint,blueprint,redprint,errormessage,makeyellow
-from util import info_message,critical_message,GenPerpThreader
+from util import info_message,critical_message
+
+class GenPerpThreader():
+    '''
+    General Purpose threading implementation that accepts a generic programmatic entity
+
+GOING TO ADD SUPPORT FOR SHELL EXANSION AVOIDANCE    
+p1 = Popen(["grep", "-v", "not"], stdin=PIPE, stdout=PIPE)
+p2 = Popen(["cut", "-c", "1-10"], stdin=p1.stdout, stdout=PIPE, close_fds=True)
+p1.stdin.write('Hello World\n')
+p1.stdin.close()
+result = p2.stdout.read() 
+assert result == "Hello Worl\n"
+
+    '''
+    def __init__(self,function_to_thread):
+        self.thread_function = function_to_thread
+        self.function_name   = getattr(self.thread_function.__name__)
+        self.threader(self.thread_function,self.function_name)
+
+    def threader(self, thread_function, name):
+        info_message("Thread {}: starting".format(self.function_name))
+        thread = threading.Thread(None,self.thread_function, self.function_name)
+        thread.start()
+        info_message("Thread {}: finishing".format(name))
 
 class CommandDict():
     def __init__(self,dictstep:dict):
         '''init stuff
         ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
-Basic shell command
+Basic shell command 
     {
     'NAME':{
         "loc": \"""ls -la\""".format(),
@@ -143,7 +167,7 @@ class PybashyRunFunction(PyBashyRun):
         
 
 
-class PybashyRunSingleJSON():
+class PybashyRunSingleJSON(PyBashyRun):
     ''' 
     This is the class you should use to run one off commands, established inline,
     deep in a complex structure that you do not wish to pick apart
@@ -158,5 +182,6 @@ class PybashyRunSingleJSON():
     }
     ''' 
     def __init__(self, JSONCommandToRun:dict):
-        GenPerpThreader(execpool.exec_command(NewCommand))
+        newcmd = PybashyRunFunction(JSONCommandToRun)
+        GenPerpThreader()
         # huh... I hope that really is all it takes... that seemed simple!

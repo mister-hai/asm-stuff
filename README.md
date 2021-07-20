@@ -14,10 +14,14 @@ This project contains code from the following sources
     https://github.com/radareorg/radare2
     https://github.com/Gallopsled/pwntools/
     https://github.com/radareorg/radare2-r2pipe/
+    https://github.com/stedolan/jq/
     #holy shit so many more 
-    # full list later, everything in "compilable code' is open source
 
- scans for ropgadgets and shit
+uses the following software for installation:
+    python3
+    jq
+
+# full list later, everything in "compilable code' is open source
 
     self info: please disregard
 
