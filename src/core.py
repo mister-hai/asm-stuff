@@ -30,17 +30,27 @@ core.py
 
 TESTING = True
 import sys,os
-import logging
-import pkgutil
 import inspect
 import traceback
 import threading
 import subprocess
-from pathlib import Path
-from importlib import import_module
 
-from util import greenprint,yellowboldprint,blueprint,redprint,errormessage,makeyellow
-from util import info_message,critical_message
+def errorprinter(message):
+    '''Will display the error from the current "Frame Context" 
+    Generally you supply an error string in the form of :
+    
+    "[-] ERROR: something happened in {some name here}" 
+    
+    If the exception handler throws an error, That error will be printed'''
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    trace = traceback.TracebackException(exc_type, exc_value, exc_tb) 
+    try:
+        print( message + ''.join(trace.format_exception_only()))
+        #traceback.format_list(trace.extract_tb(trace)[-1:])[-1]
+        print('LINE NUMBER >>>' + str(exc_tb.tb_lineno))
+    except Exception:
+        print("EXCEPTION IN ERROR HANDLER!!!")
+        print(message + ''.join(trace.format_exception_only()))
 
 class GenPerpThreader():
     '''
@@ -61,13 +71,11 @@ assert result == "Hello Worl\n"
         self.threader(self.thread_function,self.function_name)
 
     def threader(self, thread_function, name):
-        info_message("Thread {}: starting".format(self.function_name))
+        print("Thread {}: starting".format(self.function_name))
         thread = threading.Thread(None,self.thread_function, self.function_name)
         thread.start()
-        info_message("Thread {}: finishing".format(name))
+        print("Thread {}: finishing".format(name))
 
-class CommandDict():
-    def __init__(self,dictstep:dict):
         '''init stuff
         ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
 Basic shell command 
@@ -81,31 +89,39 @@ def returnval():
         }
     }
         '''
+def testreturnval():
+    return {
+    'NAME':{
+        "loc": "ls -la".format(),
+        "pass":"PASS MESSAGE",
+        "fail":"FAIL MESSAGE",
+        "info":"INFO MESSAGE"
+        }
+    }
+        
+class CommandDict():
+    def __init__(self,dictstep:dict):
         #check stuff
         keys = dictstep.keys()
         #  one command -----  only four fields
-        assert len(keys) == 1 and len(keys[0]) != 4
+        assert len(keys) == 1 and len( dictstep.get) != 4
         #raise exception if failure to match
         self.name     = dictstep.keys[0]
         try:
             self.cmd  = dictstep[self.name]['loc']
             self.info = dictstep[self.name]['info']
-            self.pass = dictstep[self.name]["pass"]
+            self.succ = dictstep[self.name]["pass"]
             self.fail = dictstep[self.name]["fail"]
         except Exception:
-            errormessage("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n    ")
-
-    def failfunc(self):
-        '''
-        called when the command fails to validate
-        '''
-        pass
-
+            errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n    ")
     def __repr__(self):
-        greenprint("Command:")
+        print("Command:")
         print(self.name)
-        greenprint("Command String:")
+        print("Command String:")
         print(self.cmd)
+
+test = CommandDict(testreturnval)
+test.__repr__
 
 class PyBashyRun(object):
     '''
@@ -113,6 +129,12 @@ Do not call this class
     '''
     def __init__(self, jsonfunction:dict):
         self.func = CommandDict(jsonfunction)
+
+    def failfunc(self):
+        '''
+        called when the command fails to validate
+        '''
+        pass
 
     def exec_command(self, 
                     command,
@@ -130,15 +152,15 @@ Do not call this class
                                         close_fds=True)                                        
                 output, error = step.communicate()
                 for output_line in output.decode().split('\n'):
-                    info_message(output_line)
+                    print(output_line)
                 for error_lines in error.decode().split('\n'):
-                    critical_message(error_lines)
+                    print(error_lines)
                 return step
             elif blocking == False:
                 # TODO: not implemented yet                
                 pass
         except Exception as derp:
-            yellowboldprint("[-] Interpreter Message: exec_command() failed!")
+            print("[-] Interpreter Message: exec_command() failed!")
             return derp
 
 class PybashyRunFunction(PyBashyRun):
@@ -152,19 +174,19 @@ class PybashyRunFunction(PyBashyRun):
         '''
         try:
             loc     = getattr(self.func,'loc')
-            passmsg = getattr(self.func,'pass')
+            passmsg = getattr(self.func,'succ')
             failmsg = getattr(self.func,'fail')
             infomsg = getattr(self.func,'info')
-            yellowboldprint(info_message)
+            print(print)
             try:
                 self.exec_command(loc)
                 print(passmsg)
                 return True
             except Exception:
-                errormessage(failmsg)
+                errorprinter(failmsg)
                 return False
         except Exception:
-            errormessage("[-] Error in PybashyRunFunction.run")
+            errorprinter("[-] Error in PybashyRunFunction.run")
             return False
         
 
@@ -177,7 +199,7 @@ class PybashyRunSingleJSON():
     {   
         "IPTablesAcceptNAT": {
             "command"         : "iptables -t nat -I PREROUTING 1 -s {} -j ACCEPT".format(self.remote_IP),
-            "info_message"    : "[+] Accept All Incomming On NAT Subnet",
+            "print"    : "[+] Accept All Incomming On NAT Subnet",
             "success_message" : "[+] Command Sucessful", 
             "failure_message" : "[-] Command Failed! Check the logfile!"           
         }
