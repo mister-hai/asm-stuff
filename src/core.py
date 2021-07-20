@@ -90,7 +90,7 @@ class CommandDict():
     '''
 Basic shell command 
 def returnval():
-    return {
+asdf = {
     'NAME':{
         "loc": "ls -la".format(),
         "pass":"PASS MESSAGE",
@@ -104,16 +104,16 @@ ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
         #check stuff
         keys = dictstep.keys()
         #  one command -----  only four fields
-        assert len(keys) == 1 and len( dictstep.get) != 4
-        #raise exception if failure to match
-        self.name     = dictstep.keys[0]
-        try:
-            self.cmd  = dictstep[self.name]['loc']
-            self.info = dictstep[self.name]['info']
-            self.succ = dictstep[self.name]["pass"]
-            self.fail = dictstep[self.name]["fail"]
-        except Exception:
-            errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n    ")
+        if len(keys) == 1 and len(dictstep.get(list(dictstep.keys())[0])) != 4:
+            #raise exception if failure to match
+            try:
+                self.name = dictstep.keys[0]
+                self.cmd  = dictstep[self.name]['loc']
+                self.info = dictstep[self.name]['info']
+                self.succ = dictstep[self.name]["pass"]
+                self.fail = dictstep[self.name]["fail"]
+            except Exception:
+                errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n")
     def __repr__(self):
         print("Command:")
         print(self.name)
