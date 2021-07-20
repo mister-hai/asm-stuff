@@ -27,10 +27,7 @@
 """
 core.py
 """
-
-TESTING = True
-import sys,os
-import inspect
+import sys
 import traceback
 import threading
 import subprocess
@@ -55,15 +52,6 @@ def errorprinter(message):
 class GenPerpThreader():
     '''
     General Purpose threading implementation that accepts a generic programmatic entity
-
-GOING TO ADD SUPPORT FOR SHELL EXANSION AVOIDANCE    
-p1 = Popen(["grep", "-v", "not"], stdin=PIPE, stdout=PIPE)
-p2 = Popen(["cut", "-c", "1-10"], stdin=p1.stdout, stdout=PIPE, close_fds=True)
-p1.stdin.write('Hello World\n')
-p1.stdin.close()
-result = p2.stdout.read() 
-assert result == "Hello Worl\n"
-
     '''
     def __init__(self,function_to_thread, threadname):
         self.thread_function = function_to_thread
