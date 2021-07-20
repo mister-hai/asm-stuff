@@ -71,25 +71,27 @@ class CommandDict():
         '''init stuff
         ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
 Basic shell command 
-    {
+def returnval():
+    return {
     'NAME':{
         "loc": "ls -la".format(),
         "pass":"PASS MESSAGE",
         "fail":"FAIL MESSAGE",
-        "info":"INFO MESSAGE"        
+        "info":"INFO MESSAGE"
+        }
     }
         '''
         #check stuff
         keys = dictstep.keys()
         #  one command -----  only four fields
-        assert len(keys) > 1 and len(keys[0]) != 4
+        assert len(keys) == 1 and len(keys[0]) != 4
         #raise exception if failure to match
         self.name     = dictstep.keys[0]
         try:
-            self.cmd  = dictstep['loc']
-            self.info = dictstep['info']
-            self.pass = dictstep["pass"]
-            self.fail = dictstep["fail"]
+            self.cmd  = dictstep[self.name]['loc']
+            self.info = dictstep[self.name]['info']
+            self.pass = dictstep[self.name]["pass"]
+            self.fail = dictstep[self.name]["fail"]
         except Exception:
             errormessage("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n    ")
 
