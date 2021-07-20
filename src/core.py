@@ -63,21 +63,20 @@ class GenPerpThreader():
         thread = threading.Thread(None,self.thread_function, self.function_name)
         thread.start()
         print("Thread {}: finishing".format(name))
-    '''
-Basic shell command 
-def returnval():
-asdf = {
-    'NAME':{
-        "loc": "ls -la".format(),
-        "pass":"PASS MESSAGE",
-        "fail":"FAIL MESSAGE",
-        "info":"INFO MESSAGE"
-        }
-    }
-ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
-    '''
 
 class CommandDict():
+    '''Basic shell command 
+    >>> def returnval():
+    >>>     return {
+    >>>     'NAME':{
+    >>>         "loc": "ls -la".format(),
+    >>>         "pass":"PASS MESSAGE",
+    >>>         "fail":"FAIL MESSAGE",
+    >>>         "info":"INFO MESSAGE"
+    >>>         }
+    >>>     }
+    ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
+    '''
     def __init__(self,dictstep:dict):
         #check stuff
         try:

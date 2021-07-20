@@ -77,6 +77,33 @@ error_message     = lambda message: logger.error(redprint(message))
 critical_message  = lambda message: logger.critical(yellow_bold_print(message))
 
 is_method          = lambda func: inspect.getmembers(func, predicate=inspect.ismethod)
+#strippedlist = list(filter("",array))
+stripempties = lambda array: [i for i in array if i]
+
+
+'''uses `readelf` to read a file'''
+readelf = lambda elfobject: subprocess.run("readelf", "-a",object, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+'''uses `file` to check the provided file '''
+filescan = lambda filename: subprocess.run(["file", filename], stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+'''checks if input is a def'''
+is_method = lambda func: inspect.getmembers(func, predicate=inspect.ismethod)
+
+'''returns a dict'''
+gzcompress = lambda inputdata: {"data" : gzip.compress(inputdata)}
+
+scanfilesbyextension = lambda directory,extension: [f for f in os.listdir(directory) if f.endswith(extension)]
+
+def rreplace(s, old, new, occurrence):
+    '''copied from somewhere
+    string replacment inline'''
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
+
+################################################################################
+##############                 ERROR HANDLING                  #################
+################################################################################
 
 def errorprinter(message):
     '''Will display the error from the current "Frame Context" 
@@ -425,3 +452,79 @@ assert result == "Hello Worl\n"
         thread = threading.Thread(None,self.thread_function, self.function_name)
         thread.start()
         info_message("Thread {}: finishing".format(name))
+
+def subprocArray(list_of_shell_commands):
+    '''
+    works with triple quoted bash scripts, no shell expansion
+    example:
+
+>>> def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
+>>>     return \'''ip link set dev {device} down
+>>>     ip addr add {ipaddr}/{netmask} dev {device}
+>>>     ip link set dev {device} up\'''.format().splitlines()
+
+>>> cmd_list = setifaceaddr("192.168.1.1", 24, "eno1")
+>>> returncode = subprocArray(cmd_list)
+    '''
+    #remove empty strings
+    list_of_shell_commands = stripempties(list_of_shell_commands)
+    for each in list_of_shell_commands:
+        subprocess.call()
+        pass            
+
+
+def sigintEvent(sig, frame):
+    print('You pressed CTRL + C')
+    exit(0)
+signal(SIGINT, sigintEvent)
+
+def error(message):
+    # Append our message with a newline character.
+    redprint('[ERROR]: {0}\n'.format(message))
+    # Halt the script right here, do not continue running the script after this point.
+    exit(1)
+
+def warn(message):
+    """Throw a warning message without halting the script.
+    :param message: A string that will be printed out to STDERR.
+    """
+    # Append our message with a newline character.
+    yellowboldprint('[WARN] {0}\n'.format(message))
+
+def gzfilewritestring(datablob,filename):
+    with gzip.open(filename, 'wb') as output:
+        # We cannot directly write Python objects like strings!
+        # We must first convert them into a bytes format using 
+        # io.BytesIO() and then write it
+        # CHECK TO MAKE SURE ITS A TYPE YOU CAN USE
+        if type(datablob) in [str,list,dict]:
+            with io.TextIOWrapper(output, encoding='utf-8') as encode:
+                encode.write(datablob)
+            
+            byteswritten = "[+] {} Bytes Written to : {}".format(os.stat(filename).st_size, filename)
+            greenprint(byteswritten)
+        else:
+            raise ValueError
+
+def gzipreadfiletostring(filename, metaclassforfile):
+    with gzip.open(filename, 'rb') as ip:
+        with io.TextIOWrapper(ip, encoding='utf-8') as decoder:
+            content = decoder.read()
+            return content 
+
+
+################################################################################
+##############                      Image                     #################
+################################################################################
+
+def saveimage(imageblob, filename, imagesaveformat):
+    '''saves file as png,jpg, etc'''
+    import PIL
+    greenprint("[+] Saving image as {}".format(filename))
+    try:
+        image_storage = PIL.Image.open(imageblob)
+        image_storage.save(filename, imagesaveformat)
+        image_storage.close()
+        greenprint("[+] Image Saved")
+    except:
+        errormessage("[-] Could Not Save Image with PIL")

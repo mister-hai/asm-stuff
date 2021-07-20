@@ -35,7 +35,7 @@ import requests
 import subprocess
 import configparser
 from src.util import errormessage,greenprint,redprint,blueprint
-
+from  src.core import CommandDict,PybashyRunSingleJSON
 import ipaddress
 from ipaddress import IPv4Address, IPv4Interface
 
@@ -137,37 +137,6 @@ except Exception:
 
 greenprint("[+] Loaded Commandline Arguments")
 
-def rootinplace():
-    '''establishes this scripts operating location and relative code locations'''
-    env = [projectroot,
-           outputdirectory,
-           ]
-    setenv(env)
-    if 'radare2' in listofpackages:
-        pulllatestrelease('radareorg','radare2')
-    if 'metasploit' in listofpackages:
-        metasploitinstall()
-    
-
-def setenv(installdirs:list):
-    '''sets the PATH variables for operation'''
-    try:
-        #validation for future expansions
-        if len(installdirs) > 1:
-            #make the installation directories
-            for projectdirectory in installdirs:
-                os.makedirs(projectdirectory, exist_ok=False)
-            #set path to point to those directories
-            os.environ["PATH"] += os.pathsep + os.pathsep.join(installdirs)
-    except Exception:
-        errormessage("[-] Failure to set Environment, Check Your Permissions Schema")
-
-def makedirs():
-    '''
-    makes directories for project
-    '''
-    pass
-
 def setnewnamespace():
     '''
     using internals to set a namespaec, this is sandboxing in action
@@ -194,27 +163,7 @@ def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
     ip addr add {ipaddr}/{netmask} dev {device}
     ip link set dev {device} up'''.format().splitlines()
 
-#strippedlist = list(filter("",array))
-stripempties = lambda array: [i for i in array if i]
 
-def subprocArray(list_of_shell_commands):
-    '''
-    works with triple quoted bash scripts, no shell expansion
-    example:
-
->>> def setifaceaddr(ipaddr:IPv4Address,netmask:int, device = 'eno1'):
->>>     return \'''ip link set dev {device} down
->>>     ip addr add {ipaddr}/{netmask} dev {device}
->>>     ip link set dev {device} up\'''.format().splitlines()
-
->>> cmd_list = setifaceaddr("192.168.1.1", 24, "eno1")
->>> returncode = subprocArray(cmd_list)
-    '''
-    #remove empty strings
-    list_of_shell_commands = stripempties(list_of_shell_commands)
-    for each in list_of_shell_commands:
-        subprocess.call()
-        pass            
 
 def mdns():
     '''
@@ -276,28 +225,19 @@ def pulllatestrelease(profile:str,repo:str=""):
         }
     }
 
-def runshellsingleton():
+def runshellsingleton(functionproto):
     '''
-    
+    Runs a function as shell command if it fits the spec
+        Please dont feed me bad data
+        I am not user friendly
+     do NOT forget the () !!!
+    >>> runshellsingleton(functionproto())
     '''
-    
-
-def runshellsteps(stepsdict):
-    '''
-    
-    '''
-    from core import PybashyRunSingleJSON
-    for each in stepsdict:
-        ## TODO check the operations of eval vs exec 
-        # splitting by lines versus block o text?
-         each.get['loc']
-        if download:
-            print(each['pass'])
-            break
-        else:
-            print(each['fail'])
-            continue
-    os.chmod(download,mode = "+x")
+    #testing comand dict operations
+    cmd = CommandDict(functionproto)
+    cmd.__repr__()
+    #testing the run function
+    PybashyRunSingleJSON(functionproto)
 
 def metasploitinstall():
     '''
@@ -306,44 +246,47 @@ chmod 755 msfinstall && \
 ./msfinstall
     '''
 
-def msfdb():
+def msfdb(operation = "init"):
     '''
-    only run when setting up
+    only run when certain you need it
     '''
     return {   
         "msfdb_init": {
-            "command"         : "example_command {}".format(""),
-            "info_message"    : "[+] INFORMATION",
-            "success_message" : "[+] Command Sucessful", 
-            "failure_message" : "[-] Command Failed! Check the logfile!"           
+            "loc"         : "msfdb {}".format(operation),
+            "info"    : "[+] INFORMATION",
+            "succ" : "[+] Command Sucessful", 
+            "fail" : "[-] Command Failed! Check the logfile!"           
         }
     }
 
 def msfrpcd(operation:str, ipaddr:IPv4Address = "127.0.0.1",password:str = "root"):
     return {
         "msf_rpcd": {
-            "command"         : "sudo msfrpcd -P {} -a {} -S".format(password,ipaddr),
-            "info_message"    : "[+] INFORMATION",
-            "success_message" : "[+] Command Sucessful", 
-            "failure_message" : "[-] Command Failed! Check the logfile!"           
+            "loc"         : "sudo msfrpcd -P {} -a {} -S".format(password,ipaddr),
+            "info"    : "[+] INFORMATION",
+            "succ" : "[+] Command Sucessful", 
+            "fail" : "[-] Command Failed! Check the logfile!"           
         }
     }
 
 def armitage():
-    locs = '''
-    export MSF_DATABASE_CONFIG=~/.msf4/database.yml
-    java -jar armitage.jar
+    '''
+    Performed on program start:
+        export MSF_DATABASE_CONFIG=~/.msf4/database.yml
+
+    Current Command:
+        java -jar armitage.jar
     '''
         
     return {
         "examplename": {
-            "command"         : "example_command {}".format(""),
-            "info_message"    : "[+] INFORMATION",
-            "success_message" : "[+] Command Sucessful", 
-            "failure_message" : "[-] Command Failed! Check the logfile!"           
+            "loc"         : "example_command {}".format(""),
+            "info"    : "[+] INFORMATION",
+            "succ" : "[+] Command Sucessful", 
+            "fail" : "[-] Command Failed! Check the logfile!"           
         },
         "examplename": {
-            "command"         : "example_command {}".format(""),
+            "loc"         : "example_command {}".format(""),
             "info_message"    : "[+] INFORMATION",
             "success_message" : "[+] Command Sucessful", 
             "failure_message" : "[-] Command Failed! Check the logfile!"           
