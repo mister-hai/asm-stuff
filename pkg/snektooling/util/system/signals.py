@@ -1,20 +1,36 @@
     '''
-    SIGBREAK (Unix), CTRL_BREAK_EVENT (Windows): When CTRL + BREAK is pressed on the keyboard
-    SIG_DFL: Perform the default function for the signal
-    SIG_IGN: Ignore the given signal. As an instance, we can do signal.signal(signal.SIGBREAK, signal.SIG_IGN) to ignore the break signal.
-    SIGABRT: Abort signal
-    SIGALRM: Timer signal
-    SIGBUS: Bad memory access signal
-    SIGCHILD/SIGCLD: Child processes stopped or terminated
-    SIGCOUNT: Continue the process if it is currently stopped
-    SIGFPE: If a floating-point exception is raised
-    SIGHUP: If hangup/death is detected on controlling terminal/process
-    SIGILL: When illegal instruction is encountered
-    SIGINT (Unix), CTRL_C_EVENT(Windows): CTRL+ C is pressed on the keyboard (keyboard interrupt)
-    SIGKILL: When the signal to kill is raised
-    SIGPIPE: When we are writing to a broken pipe without any readers
-    SIGSEGV: Invalid memory reference
-    SIGTERM: When the termination signal is raised
+    SIGBREAK (Unix), CTRL_BREAK_EVENT (Windows):
+        When CTRL + BREAK is pressed on the keyboard
+    SIG_DFL: 
+        Perform the default function for the signal
+    SIG_IGN: 
+        Ignore the given signal. As an instance, we can do signal.signal(signal.SIGBREAK, signal.SIG_IGN) to ignore the break signal.
+    SIGABRT: 
+        Abort signal
+    SIGALRM:
+        Timer signal
+    SIGBUS: 
+        Bad memory access signal
+    SIGCHILD/SIGCLD: 
+        Child processes stopped or terminated
+    SIGCOUNT: 
+        Continue the process if it is currently stopped
+    SIGFPE: 
+        If a floating-point exception is raised
+    SIGHUP: 
+        If hangup/death is detected on controlling terminal/process
+    SIGILL: 
+        When illegal instruction is encountered
+    SIGINT (Unix), CTRL_C_EVENT(Windows): 
+        CTRL+ C is pressed on the keyboard (keyboard interrupt)
+    SIGKILL: 
+        When the signal to kill is raised
+    SIGPIPE: 
+        When we are writing to a broken pipe without any readers
+    SIGSEGV:
+        Invalid memory reference
+    SIGTERM: 
+        When the termination signal is raised
 
 
 Signal Functions
@@ -103,3 +119,12 @@ Lastly, I wanted to outline the best practices for signals.
     We can use the faulthandler module in Python to report on synchronous
     errors.
 '''
+import sys
+from ..Utils import redprint
+import signal
+from signals import *
+
+def sigintEvent(sig, frame):
+    redprint('[!] CTRL + C PRESSED! Exiting program!')
+    exit(0)
+signal(SIGINT, sigintEvent)

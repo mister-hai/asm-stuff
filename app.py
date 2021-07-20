@@ -230,6 +230,11 @@ def installradare2():
     releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
     returncode = runshellcommand(releaseurl)
 
+def installropper():
+    '''
+    https://github.com/sashs/Ropper/archive/refs/heads/master.zip
+    '''
+    
 def installpwndbg():
     '''
     Release:
