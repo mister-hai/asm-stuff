@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python3.9
 ################################################################################
-##  Pybash-sh; fuzzing harness generator - Vintage 2021 Python 3.9            ##
+##  Pybash Takes JSON, READ - Vintage 2021 Python 3.9                         ##
 ################################################################################                
 #  YOU HAVE TO PROVIDE THE MODULES YOU CREATE AND THEY MUST FIT THE SPEC      ##
 #                                                                             ##
@@ -73,7 +73,7 @@ class CommandDict():
 Basic shell command 
     {
     'NAME':{
-        "loc": \"""ls -la\""".format(),
+        "loc": "ls -la".format(),
         "pass":"PASS MESSAGE",
         "fail":"FAIL MESSAGE",
         "info":"INFO MESSAGE"        
@@ -167,7 +167,7 @@ class PybashyRunFunction(PyBashyRun):
         
 
 
-class PybashyRunSingleJSON(PyBashyRun):
+class PybashyRunSingleJSON():
     ''' 
     This is the class you should use to run one off commands, established inline,
     deep in a complex structure that you do not wish to pick apart
