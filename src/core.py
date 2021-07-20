@@ -102,18 +102,21 @@ ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
     '''
     def __init__(self,dictstep:dict):
         #check stuff
-        keys = dictstep.keys()
-        #  one command -----  only four fields
-        if len(keys) == 1 and len(dictstep.get(list(dictstep.keys())[0])) != 4:
-            #raise exception if failure to match
-            try:
+        try:
+            keys = dictstep.keys()
+            #  one command -----  only four fields
+            if len(keys) == 1 and len(dictstep.get(list(dictstep.keys())[0])) != 4:
+                #raise exception if failure to match
                 self.name = dictstep.keys[0]
                 self.cmd  = dictstep[self.name]['loc']
                 self.info = dictstep[self.name]['info']
                 self.succ = dictstep[self.name]["pass"]
                 self.fail = dictstep[self.name]["fail"]
-            except Exception:
-                errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n")
+            else:
+                raise Exception
+        except Exception:
+            errorprinter("[-] JSON Input Failed to MATCH SPECIFICATION!\n\n")
+
     def __repr__(self):
         print("Command:")
         print(self.name)
