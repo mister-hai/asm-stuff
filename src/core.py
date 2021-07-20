@@ -183,5 +183,5 @@ class PybashyRunSingleJSON(PyBashyRun):
     ''' 
     def __init__(self, JSONCommandToRun:dict):
         newcmd = PybashyRunFunction(JSONCommandToRun)
-        GenPerpThreader(newcmd)
+        GenPerpThreader(newcmd.run)
         # huh... I hope that really is all it takes... that seemed simple!
