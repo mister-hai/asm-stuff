@@ -34,27 +34,45 @@ from io import BytesIO
 from pathlib import Path
 
 from urllib.parse import urlparse
-from requests.utils import requote_uri
+from requests.utils import default_headers, requote_uri
 from requests.auth import HTTPBasicAuth
-
-from src.util import redprint,blueprint,greenprint,errormessage,debugmessage
-from src.util import warn,yellowboldprint,defaultheaders,makered,domainlist
 
 
 class HTTPDownloadRequest():
-    '''refactoring to be generic, was based on discord'''
-    #https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz
+    '''
+    USAGE:
 
-    def __init__(self,headers:dict,url:str):#,username,token = ""):
-        self.requesturl = url
-        #self.token = token
+>>> target = 'https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz'
+>>> newrequest = HTTPDownloadRequest(headers,url)
+>>> newrequest.makerequest()
+>>> tarfileblob = newrequest.data
+
+    To make a second request for a different file/schema
+
+>>> newrequest.setrequesturl(url)
+>>> newrequest.makerequest()
+    '''
+
+    def __init__(self):
+        '''
+        HTTP connection class for downloading from REST api's
+        '''
+        self.requesturl :str
+        self.response   :requests.Response
+        defaultheaders = {
+            'User-Agent':"Mozilla/5.0 (Windows NT 10.0; WOW64) \
+            AppleWebKit/537.36 (KHTML, like Gecko) \
+            discord/0.0.309 Chrome/83.0.4103.122 \
+            Electron/9.3.5 Safari/537.36"}
+
+
         if len(self.headers) > 0:
             self.headers = defaultheaders
-        else:
-            self.setHeaders(headers)
 
     def makerequest(self):
-        '''call this after you call the class'''
+        '''
+        call this after you call the class
+        '''
         try:
             # perform the http request
             self.sendRequest(self.requesturl)
@@ -63,13 +81,16 @@ class HTTPDownloadRequest():
                 raise Exception
             else:
                 return self.response
-
         except Exception:
-            errormessage("[-] Error in HTTPDownloadRequest(), ")
+            errormessage("[-] Error in HTTPDownloadRequest()")
 
     def setrequesturl(self,newurl):
-        '''sets the url to request from
-    now you only need to create one object and call this for each new download'''
+        '''
+        sets the url to request from
+    
+        now you only need to create one object and call 
+        this for each new download
+        '''
         try:
             self.requesturl = newurl
             return True
@@ -81,13 +102,16 @@ class HTTPDownloadRequest():
 
 
     def sendRequest(self, url):
-        '''first this is called'''
+        '''
+        first this is called
+        '''
         self.response = requests.get(url, headers=self.headers)#,auth=HTTPBasicAuth(username="",password=self.token))
+
         if TESTING == True:
             for header in self.response.headers:
                 if header[0] == 'Retry-After':
                     debugmessage(header)
-        #filter out errors with our own stuff first
+
         if self.was_there_was_an_error(self.response.status_code) == False:
             # Return the response if the connection was successful.
             if 199 < self.response.status_code < 300:
@@ -97,8 +121,10 @@ class HTTPDownloadRequest():
                 self.handleredirect()
             # Otherwise throw a warning message to acknowledge a failed connection.
             else: 
-                warn('HTTP {} from {}. Image Download Failed'.format(self.response.status_code, self.redirecturl))
-
+                warn('HTTP {} from {}. \
+                    HTTP Connection Failed'.format(self.response.status_code, 
+                                                   self.redirecturl)
+                                                   )
             # if we need to retry
             # Handle HTTP 429 Too Many Requests
             if self.response.status_code == 429:

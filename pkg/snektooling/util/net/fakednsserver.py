@@ -1,5 +1,6 @@
 import socket
 
+#... I think this came from github?
 class DNSQuery:
   def __init__(self, data):
     self.data=data

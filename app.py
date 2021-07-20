@@ -262,8 +262,8 @@ def msfdb(operation = "init"):
 def msfrpcd(operation:str, ipaddr:IPv4Address = "127.0.0.1",password:str = "root"):
     return {
         "msf_rpcd": {
-            "loc"         : "sudo msfrpcd -P {} -a {} -S".format(password,ipaddr),
-            "info"    : "[+] INFORMATION",
+            "loc"  : "sudo msfrpcd -P {} -a {} -S".format(password,ipaddr),
+            "info" : "[+] INFORMATION",
             "succ" : "[+] Command Sucessful", 
             "fail" : "[-] Command Failed! Check the logfile!"           
         }
@@ -281,20 +281,11 @@ def armitage():
     return {
         "examplename": {
             "loc"         : "example_command {}".format(""),
-            "info"    : "[+] INFORMATION",
-            "succ" : "[+] Command Sucessful", 
-            "fail" : "[-] Command Failed! Check the logfile!"           
-        },
-        "examplename": {
-            "loc"         : "example_command {}".format(""),
             "info_message"    : "[+] INFORMATION",
             "success_message" : "[+] Command Sucessful", 
             "failure_message" : "[-] Command Failed! Check the logfile!"           
+            }
         }
-    
-    
-    
-    }
 
 def msfrpc(action:str,ip:IPv4Address,port:int):
     '''OPTIONS:
