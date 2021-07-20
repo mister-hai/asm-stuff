@@ -76,19 +76,6 @@ assert result == "Hello Worl\n"
         thread.start()
         print("Thread {}: finishing".format(name))
 
-        '''init stuff
-        ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
-Basic shell command 
-def returnval():
-    return {
-    'NAME':{
-        "loc": "ls -la".format(),
-        "pass":"PASS MESSAGE",
-        "fail":"FAIL MESSAGE",
-        "info":"INFO MESSAGE"
-        }
-    }
-        '''
 def testreturnval():
     return {
     'NAME':{
@@ -100,6 +87,19 @@ def testreturnval():
     }
         
 class CommandDict():
+    '''
+Basic shell command 
+def returnval():
+    return {
+    'NAME':{
+        "loc": "ls -la".format(),
+        "pass":"PASS MESSAGE",
+        "fail":"FAIL MESSAGE",
+        "info":"INFO MESSAGE"
+        }
+    }
+ONLY ONE COMMAND, WILL THROW ERROR IF NOT TO SPEC
+    '''
     def __init__(self,dictstep:dict):
         #check stuff
         keys = dictstep.keys()
@@ -120,7 +120,7 @@ class CommandDict():
         print("Command String:")
         print(self.cmd)
 
-test = CommandDict(testreturnval)
+test = CommandDict(testreturnval())
 test.__repr__
 
 class PyBashyRun(object):
