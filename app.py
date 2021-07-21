@@ -120,6 +120,9 @@ try:
     #parse args to get defaults
     arguments = parser.parse_args()
     # get configs from the specified/default set
+    # and make global, 
+    global config
+    # this is an acceptable use of globals
     config = configparser.ConfigParser()
     configset = arguments.configset
     #start installing packages later

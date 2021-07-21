@@ -1,0 +1,14 @@
+Working with large files
+
+Two principles need to be applied uniformly when working with 
+large files in Python.
+
+    Since any IO routine can block, we must keep each stage of
+    the pipeline in a different thread or process. We use threads 
+    in this example, but subprocesses would let you avoid the GIL.
+    We must use incremental reads and writes so that we don't wait 
+    for EOF before starting to make progress.
+
+An alternative is to use nonblocking IO, though this is cumbersome 
+in standard Python. See gevent for a lightweight threading library 
+that implements the synchronous IO API using nonblocking primitives.

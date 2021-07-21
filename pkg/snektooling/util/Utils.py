@@ -35,6 +35,7 @@ import logging
 import pkgutil
 import secrets
 import socket
+import signal
 import traceback
 import threading
 import subprocess
@@ -527,3 +528,5 @@ def saveimage(imageblob, filename, imagesaveformat):
         greenprint("[+] Image Saved")
     except:
         errormessage("[-] Could Not Save Image with PIL")
+
+
