@@ -2,7 +2,9 @@ import os
 import pathlib
 
 #lolz
-from pkg.snektooling.util.net.httpdownloader import HTTPDownloadRequest
+#https://github.com/x64dbg/x64dbg/wiki/Plugins
+
+from pkg.snektooling.Util import HTTPDownloadRequest
 
 scriptdir = lambda : pathlib.Path(__file__).parent.resolve()
 

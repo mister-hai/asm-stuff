@@ -473,10 +473,10 @@ def subprocArray(list_of_shell_commands):
         pass            
 
 
-def sigintEvent(sig, frame):
-    print('You pressed CTRL + C')
-    exit(0)
-signal(SIGINT, sigintEvent)
+#def sigintEvent(sig, frame):
+#    print('You pressed CTRL + C')
+#    exit(0)
+#signal(SIGINT, sigintEvent)
 
 def error(message):
     # Append our message with a newline character.

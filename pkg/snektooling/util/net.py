@@ -38,36 +38,36 @@ from requests.utils import default_headers, requote_uri
 from requests.auth import HTTPBasicAuth
 
 from Utils import errormessage,redprint,greenprint,blueprint
-from Utils import debugmessage,info_message,warn,yellowboldprint
+from Utils import info_message,warn,yellowboldprint
 
 
 import socket
 
-
-
 class DNSQuery:
-  def __init__(self, data):
-    self.data=data
-    self.dominio=''
-    tipo = (ord(data[2]) >> 3) & 15   # Opcode bits
-    if tipo == 0:                     # Standard query
-      ini=12
-      lon=ord(data[ini])
-      while lon != 0:
-        self.dominio+=data[ini+1:ini+lon+1]+'.'
-        ini+=lon+1
-        lon=ord(data[ini])
+    def __init__(self, data):
+        self.data=data
 
-  def respuesta(self, ip):
-    packet=''
-    if self.dominio:
-      packet+=self.data[:2] + "\x81\x80"
-      packet+=self.data[4:6] + self.data[4:6] + '\x00\x00\x00\x00'   # Questions and Answers Counts
-      packet+=self.data[12:]                                         # Original Domain Name Question
-      packet+='\xc0\x0c'                                             # Pointer to domain name
-      packet+='\x00\x01\x00\x01\x00\x00\x00\x3c\x00\x04'             # Response type, ttl and resource data length -> 4 bytes
-      packet+=str.join('',map(lambda x: chr(int(x)), ip.split('.'))) # 4bytes of IP
-    return packet
+    def dnspacket(self):
+        self.dominio=''
+        opcode = (ord(self.data[2]) >> 3) & 15   # Opcode bits
+        if opcode == 0:                     # Standard query
+            bit=12
+            length=ord(self.data[bit])
+        while length != 0:
+            self.dominio+=self.data[bit+1:bit+length+1]+'.'
+            bit+=length+1
+            length=ord(self.data[bit])
+
+    def respuesta(self, ip):
+        packet=''
+        if self.dominio:
+            packet+=self.data[:2] + "\x81\x80"
+            packet+=self.data[4:6] + self.data[4:6] + '\x00\x00\x00\x00'   # Questions and Answers Counts
+            packet+=self.data[12:]                                         # Original Domain Name Question
+            packet+='\xc0\x0c'                                             # Pointer to domain name
+            packet+='\x00\x01\x00\x01\x00\x00\x00\x3c\x00\x04'             # Response type, ttl and resource data length -> 4 bytes
+            packet+=str.join('',map(lambda x: chr(int(x)), ip.split('.'))) # 4bytes of IP
+        return packet
 
 class HTTPDownloadRequest():
     '''
@@ -97,6 +97,20 @@ class HTTPDownloadRequest():
         '''
         self.requesturl :str
         self.response   :requests.Response
+        self.headers = ''
+        #set an empty default
+        self.filter = [
+                #'discordapp.com', 
+                #'discord.com',
+                #"discordapp.net"
+                ]
+        #if the filter is off
+        if self.filteractive == False:
+            pass
+        else:
+            #turn it off
+            self.togglefilter()
+        
         defaultheaders = {
             'User-Agent':"Mozilla/5.0 (Windows NT 10.0; WOW64) \
             AppleWebKit/537.36 (KHTML, like Gecko) \
@@ -110,11 +124,7 @@ class HTTPDownloadRequest():
         '''
         Returns a list containing approved domains
         '''
-        return [
-                'discordapp.com', 
-                'discord.com',
-                "discordapp.net"
-                ]
+        return self.filter
 
 
     def checkforgzip(self,newfilename, response:requests.Response):
@@ -162,14 +172,14 @@ class HTTPDownloadRequest():
         '''
         first this is called
         '''
-        self.response = requests.get(url, headers=self.headers)
+        self.response = requests.get(url, headers=self.headers, decode_contents=False)
         #if downloading a gzip, save it
         self.checkforgzip(self,self.response)
         
         if TESTING == True:
             for header in self.response.headers:
                 if header[0] == 'Retry-After':
-                    debugmessage(header)
+                    blueprint(header)
 
         if self.was_there_was_an_error(self.response.status_code) == False:
             # Return the response if the connection was successful.
@@ -199,6 +209,13 @@ class HTTPDownloadRequest():
         Return the state of the filter apparatus
         '''
         return self.filtering
+    
+    def setfilter(self, filterlist:list):
+        '''
+        sets the filter list
+        takes csv or array
+        '''
+        self.filter = filterlist
 
     def togglefilter(self):
         '''
@@ -228,7 +245,7 @@ class HTTPDownloadRequest():
             nextdomain = self.redirecturl.split('/')[2].split(':')[0]
             #if filter active and matched
             if nextdomain in self.domainlist():
-                debugmessage("[+] REDIRECT to : {}".format(self.redirecturl))
+                yellowboldprint("[+] REDIRECT to : {}".format(self.redirecturl))
                 self.sendRequest(self.redirecturl)
         else:
             # Throw a warning message to acknowledge an untrusted redirect.
@@ -264,26 +281,26 @@ class HTTPDownloadRequest():
             return False
 
 
-if __name__ == '__main__':
-  ip='192.168.1.1'
-  print('pyminifakeDNS:: dom.query. 60 IN A %s' % ip)
+ip='192.168.1.1'
+print('pyminifakeDNS:: dom.query. 60 IN A %s' % ip)
   
-  udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  udps.bind(('',53))
+#udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#udps.bind(('',53))
   
-  try:
-    while 1:
-      data, addr = udps.recvfrom(1024)
-      p=DNSQuery(data)
-      udps.sendto(p.respuesta(ip), addr)
-      print('Respuesta: %s -> %s' % (p.dominio, ip))
-  except KeyboardInterrupt:
-    print('Finalizando')
-    udps.close()
+#try:
+#    while 1:
+#        data, addr = udps.recvfrom(1024)
+#        p=DNSQuery(data)
+#        udps.sendto(p.respuesta(ip), addr)
+#        print('Respuesta: %s -> %s' % (p.dominio, ip))
+#except KeyboardInterrupt:
+#    print('Finalizando')
+#    udps.close()
 
 target = 'https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz'
-newrequest = HTTPDownloadRequest(url = target, filter=False)
+newrequest = HTTPDownloadRequest()
+newrequest.setrequesturl(target)
 newrequest.makerequest()
-file = newrequest.tarfileblob
+file = newrequest.response
 newrequest.setrequesturl(target)
 newrequest.makerequest()
