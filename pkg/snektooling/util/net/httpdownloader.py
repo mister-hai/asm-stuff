@@ -37,17 +37,17 @@ from urllib.parse import urlparse
 from requests.utils import default_headers, requote_uri
 from requests.auth import HTTPBasicAuth
 
-from Utils import errorprinter,redprint,greenprint,blueprint
-from Utils import debug_message,info_message
+from Utils import errormessage,redprint,greenprint,blueprint
+from Utils import debugmessage,info_message,warn,yellowboldprint
 
 class HTTPDownloadRequest():
     '''
     USAGE:
 
 >>> target = 'https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz'
->>> newrequest = HTTPDownloadRequest(headers,url)
+>>> newrequest = HTTPDownloadRequest(headers,url, filter=False)
 >>> newrequest.makerequest()
->>> tarfileblob = newrequest.response.raw.read()
+>>> file = request.tarfileblob
 
     To make a second request for a different file/schema
 
@@ -74,21 +74,31 @@ class HTTPDownloadRequest():
             discord/0.0.309 Chrome/83.0.4103.122 \
             Electron/9.3.5 Safari/537.36"}
 
-
         if len(self.headers) > 0:
             self.headers = defaultheaders
     
+    def domainlist(self):
+        '''
+        Returns a list containing approved domains
+        '''
+        return [
+                'discordapp.com', 
+                'discord.com',
+                "discordapp.net"
+                ]
+
+
     def checkforgzip(self,newfilename, response:requests.Response):
         '''
         Checks to see if Gzip to prevent decompression
-        TODO add to filtering section
         '''
         if {'Content-Encoding': 'gzip'} in response.headers:
-            with open(newfilename, 'wb') as f:
-                for chunk in response.raw.stream(1024, decode_content=False):
-                    if chunk:
-                        f.write(chunk)
-                f.close()
+            tarfileblob = response.raw.read(decode_content=False)
+            #with open(newfilename, 'wb') as f:
+            #    for chunk in response.raw.stream(1024, decode_content=False):
+            #        if chunk:
+            #            f.write(chunk)
+            #    f.close()
 
     def makerequest(self):
         '''
@@ -108,9 +118,6 @@ class HTTPDownloadRequest():
     def setrequesturl(self,newurl):
         '''
         sets the url to request from
-    
-        now you only need to create one object and call 
-        this for each new download
         '''
         try:
             self.requesturl = newurl
@@ -126,8 +133,10 @@ class HTTPDownloadRequest():
         '''
         first this is called
         '''
-        self.response = requests.get(url, headers=self.headers)#,auth=HTTPBasicAuth(username="",password=self.token))
-
+        self.response = requests.get(url, headers=self.headers)
+        #if downloading a gzip, save it
+        self.checkforgzip(self,self.response)
+        
         if TESTING == True:
             for header in self.response.headers:
                 if header[0] == 'Retry-After':
@@ -163,6 +172,9 @@ class HTTPDownloadRequest():
         return self.filtering
 
     def togglefilter(self):
+        '''
+        Reverses the state of the filter when called
+        '''
         if self.filteractive == True:
             self.filteractive = False
         elif self.filteractive == False:
@@ -171,17 +183,24 @@ class HTTPDownloadRequest():
             errormessage("[-] Failure to toggle domain filter")
 
     def retryrequest(self,url):
-        '''and this is sent if we need to retry'''
+        '''
+        Called if we need to retry a connection
+        '''
         self.sendRequest(url)
 
     def handleredirect(self):
+        '''
+        Follows redirects if filter active
+        '''
+        #if we are following redirects
+        if self.followredirect:
         # Grab the URL that we're redirecting to.
-        self.redirecturl = self.response.header('Location')
-        nextdomain = self.redirecturl.split('/')[2].split(':')[0]
-        # If the domain is a part of Discord then re-run this function.
-        if nextdomain in domainlist:
-            debugmessage("[+] REDIRECT to : {}".format(self.redirecturl))
-            self.sendRequest(self.redirecturl)
+            self.redirecturl = self.response.header('Location')
+            nextdomain = self.redirecturl.split('/')[2].split(':')[0]
+            #if filter active and matched
+            if nextdomain in self.domainlist():
+                debugmessage("[+] REDIRECT to : {}".format(self.redirecturl))
+                self.sendRequest(self.redirecturl)
         else:
             # Throw a warning message to acknowledge an untrusted redirect.
             warn('[+] Ignored unsafe redirect to {}.'.format(self.redirecturl))
@@ -189,8 +208,10 @@ class HTTPDownloadRequest():
 
     
     def was_there_was_an_error(self, responsecode):
-        ''' Basic prechecking before more advanced filtering of output
-Returns False if no error
+        ''' 
+        Basic checks 
+        
+        Returns False if no error
         '''
         # server side error]
         set1 = [404,504,503,500]

@@ -1,5 +1,9 @@
 import os
 import pathlib
+
+#lolz
+from pkg.snektooling.util.net.httpdownloader import HTTPDownloadRequest
+
 scriptdir = lambda : pathlib.Path(__file__).parent.resolve()
 
 def rootinplace():
@@ -7,11 +11,10 @@ def rootinplace():
     env = [projectroot,outputdirectory]
 
     setpaths(env)
-    if INSTALL:
-        if 'radare2' in listofpackages:
-            pulllatestrelease('radareorg','radare2')
-        if 'metasploit' in listofpackages:
-            metasploitinstall()
+    if 'radare2' in listofpackages:
+        pulllatestrelease('radareorg','radare2')
+    if 'metasploit' in listofpackages:
+        metasploitinstall()
     
 def appendtoselfandlock():
     '''
@@ -24,7 +27,9 @@ def appendtoselfandlock():
         herp.newlines(NEWVARS)
         herp.close()
     #now we lock this file to prevent the user from
-    #accidentally reinstalling stuff and ruining the ENV we have created
+    #accidentally reinstalling stuff and ruining 
+    # the ENV we have created
+    chattrself(__file__)
 
 def setpaths(installdirs:list):
     '''sets the PATH variables for operation'''
@@ -54,15 +59,6 @@ def chattrself(placement:str,flags:str='-i'):
 
     Makes file immutable after install to persist settings
 
-# Taken from ext2fs/ext2_fs.h.
->>> EXT2_IMMUTABLE_FL = 0x00000010
->>> EXT2_IOC_SETFLAGS = 0x40086602
->>> fd = os.open('/var/tmp/testfile', os.O_RDWR)
->>> f = struct.pack('i', EXT2_IMMUTABLE_FL)
->>> fcntl.ioctl(fd, EXT2_IOC_SETFLAGS, f);
->>> os.close(fd)
-
-OR ...
     chattr -i ./self
     '''
     if placement == None:
@@ -75,10 +71,35 @@ OR ...
             "fail"  : "[-] Command Failed! Check the logfile!"           
             }}
 
+def chatter2(location:str):
+    '''
+    Directly Uses a lower level interface to lock files
+    '''
+    # Taken from ext2fs/ext2_fs.h.
+    import fcntl
+    import struct
+    EXT2_IMMUTABLE_FL = 0x00000010
+    EXT2_IOC_SETFLAGS = 0x40086602
+    fd = os.open(location, os.O_RDWR)
+    f = struct.pack('i', EXT2_IMMUTABLE_FL)
+    fcntl.ioctl(fd, EXT2_IOC_SETFLAGS, f)
+    os.close(fd)
+
+
 def installropper():
     '''
     https://github.com/sashs/Ropper/archive/refs/heads/master.zip
+    target = 'https://github.com/sashs/Ropper/archive/refs/tags/v1.13.6.tar.gz'
+
     '''
+
+def downloadtarfile(filename:str, target:str):
+    newrequest = HTTPDownloadRequest(url = target, filter=False)
+    newrequest.makerequest()
+    file = newrequest.tarfileblob
+    tarfile = open(filename,'wb')
+    tarfile.write(newrequest.tarfileblob)
+    tarfile.close()
 
 def installpwndbg():
     '''
@@ -88,8 +109,7 @@ def installpwndbg():
         https://github.com/sashs/Ropper/archive/refs/heads/master.zip
     '''
     url = "https://github.com/pwndbg/pwndbg/archive/refs/heads/dev.zip"
-    requests.get(url=url,)
-
+    downloadtarfile('pwndbg.tar.gz',url)
 
 def pulllatestrelease(profile:str,repo:str="",method = 1):
     '''

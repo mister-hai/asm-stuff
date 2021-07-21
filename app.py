@@ -179,51 +179,6 @@ def installradare2():
     releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
     returncode = runshellcommand(releaseurl)
 
-def installropper():
-    '''
-    https://github.com/sashs/Ropper/archive/refs/heads/master.zip
-    '''
-
-def installpwndbg():
-    '''
-    Release:
-        https://github.com/pwndbg/pwndbg/archive/refs/tags/2021.06.22.tar.gz
-    Dev:
-        https://github.com/sashs/Ropper/archive/refs/heads/master.zip
-    '''
-    url = "https://github.com/pwndbg/pwndbg/archive/refs/heads/dev.zip"
-    requests.get(url=url,)
-
-
-def pulllatestrelease(profile:str,repo:str=""):
-    '''
->>> releaseurl = pulllatestrelease(profile = 'radare2org', repo = 'radare2')
->>> returncode = runshellsteps(releaseurl)
-    '''
-    stepsdict =  {
-        #START basic shell command
-        # NAME
-        'meth1':{
-            # LINE OF CODE
-            "loc": """curl --silent "https://api.github.com/{profile}/{repo}/releases/latest" \
-| jq -r .tag_name""".format(profile = profile,
-                            repo = repo),
-            #PASS MESSAGE
-            "pass":"",
-            #FAIL MESSAGE
-            "fail":"",
-            #INFO MESSAGE
-            "info":""        
-        },
-        #END: Basic shell command
-        #if they dont support releases
-        "meth2":{
-            "loc": """curl --silent "https://api.github.com/repos/{profile}/{repo}/tags" | jq -r '.[0].name'""".format(profile = profile,repo = repo),
-            "pass":"success message",
-            "fail":"",
-            "info":""        
-        }
-    }
 
 def runshellsingleton(functionproto):
     '''

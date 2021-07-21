@@ -25,7 +25,9 @@ Utilities and boiler plate
 ################################################################################
 ##############                   IMPORTS                       #################
 ################################################################################
+import io
 import time
+import gzip
 import sys,os
 import hashlib
 import inspect
@@ -65,16 +67,16 @@ script_osdir        = Path(__file__).parent.absolute()
 redprint          = lambda text: print(Fore.RED + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
 blueprint         = lambda text: print(Fore.BLUE + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
 greenprint        = lambda text: print(Fore.GREEN + ' ' +  text + ' ' + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
-yellow_bold_print = lambda text: print(Fore.YELLOW + Style.BRIGHT + ' {} '.format(text) + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
+yellowboldprint = lambda text: print(Fore.YELLOW + Style.BRIGHT + ' {} '.format(text) + Style.RESET_ALL) if (COLORMEQUALIFIED == True) else print(text)
 makeyellow        = lambda text: Fore.YELLOW + ' ' +  text + ' ' + Style.RESET_ALL if (COLORMEQUALIFIED == True) else text
 makered           = lambda text: Fore.RED + ' ' +  text + ' ' + Style.RESET_ALL if (COLORMEQUALIFIED == True) else None
 makegreen         = lambda text: Fore.GREEN + ' ' +  text + ' ' + Style.RESET_ALL if (COLORMEQUALIFIED == True) else None
 makeblue          = lambda text: Fore.BLUE + ' ' +  text + ' ' + Style.RESET_ALL if (COLORMEQUALIFIED == True) else None
 debug_message     = lambda message: logger.debug(blueprint(message)) 
 info_message      = lambda message: logger.info(greenprint(message))   
-warning_message   = lambda message: logger.warning(yellow_bold_print(message)) 
+warning_message   = lambda message: logger.warning(yellowboldprint(message)) 
 error_message     = lambda message: logger.error(redprint(message)) 
-critical_message  = lambda message: logger.critical(yellow_bold_print(message))
+critical_message  = lambda message: logger.critical(yellowboldprint(message))
 
 is_method          = lambda func: inspect.getmembers(func, predicate=inspect.ismethod)
 #strippedlist = list(filter("",array))
@@ -105,7 +107,7 @@ def rreplace(s, old, new, occurrence):
 ##############                 ERROR HANDLING                  #################
 ################################################################################
 
-def errorprinter(message):
+def errormessage(message):
     '''Will display the error from the current "Frame Context" 
     Generally you supply an error string in the form of :
     
@@ -119,7 +121,7 @@ def errorprinter(message):
         #traceback.format_list(trace.extract_tb(trace)[-1:])[-1]
         blueprint('LINE NUMBER >>>' + str(exc_tb.tb_lineno))
     except Exception:
-        yellow_bold_print("EXCEPTION IN ERROR HANDLER!!!")
+        yellowboldprint("EXCEPTION IN ERROR HANDLER!!!")
         redprint(message + ''.join(trace.format_exception_only()))
 
 
@@ -159,16 +161,13 @@ def to_bufferable(binary):
 def _get_byte(c):
     return ord(c)
 
-try:
-    xrange
-except:
-    def to_bufferable(binary):
-        if isinstance(binary, bytes):
-            return binary
-        return bytes(ord(b) for b in binary)
+def to_bufferable(binary):
+    if isinstance(binary, bytes):
+        return binary
+    return bytes(ord(b) for b in binary)
 
-    def _get_byte(c):
-        return c
+def _get_byte(c):
+    return c
 
 def append_PKCS7_padding(data):
     pad = 16 - (len(data) % 16)
